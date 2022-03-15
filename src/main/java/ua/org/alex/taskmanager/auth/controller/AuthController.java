@@ -6,6 +6,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,36 +81,28 @@ public class AuthController {
     return "OK-with-auth";
   }
 
-  @PostMapping("/register")
+  @PutMapping("/register")
   public ResponseEntity register(@Valid @RequestBody User user) {
 
     if (userService.userExist(user.getUsername(), user.getEmail())) {
       throw new UserOrEmailExistException("User or email already exists");
     }
 
-    if (user.getRoles() == null || user.getRoles().isEmpty()) {
-      Role userRole = userService.findByName(DEFAULT_ROLE)
-          .orElseThrow(() -> new RoleNotFoundException("Role USER is not found."));
-      user.getRoles().add(userRole);
-    } else {
+    Role userRole = userService.findByName(DEFAULT_ROLE)
+        .orElseThrow(() -> new RoleNotFoundException("Default Role USER not found."));
+    user.getRoles().add(userRole);
 
-      user.getRoles().forEach(role -> {
-        userService.findByName(role.getName())
-            .orElseThrow(
-                () -> new RoleNotFoundException("Role " + role + " is not found in database"));
-      });
-    }
+    user.setPassword(encoder.encode(user.getPassword()));
 
     Activity activity = new Activity();
-    activity.setUser(user);
     activity.setActivated(false);
+    activity.setUser(user);
     activity.setUuid(UUID.randomUUID().toString());
 
-    user.setPassword(encoder.encode((user.getPassword())));
+    userService.register(user, activity);
 
     emailService.sendActivationEmail(user.getEmail(), user.getUsername(), activity.getUuid());
 
-    userService.register(user, activity);
     return ResponseEntity.ok().build();
   }
 

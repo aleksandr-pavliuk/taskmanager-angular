@@ -1,6 +1,7 @@
 package ua.org.alex.taskmanager.auth.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.session.SessionManagementFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import ua.org.alex.taskmanager.auth.filter.AuthTokenFilter;
 import ua.org.alex.taskmanager.auth.filter.ExceptionHandlerFilter;
 import ua.org.alex.taskmanager.auth.service.UserDetailsServiceImpl;
@@ -28,7 +31,10 @@ import ua.org.alex.taskmanager.auth.service.UserDetailsServiceImpl;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableAsync
 public class SpringConfig extends WebSecurityConfigurerAdapter {
-  
+
+  @Value("${client.url}")
+  private String clientURL;
+
   private UserDetailsServiceImpl userDetailsService;
 
   private AuthTokenFilter authTokenFilter;
@@ -41,19 +47,38 @@ public class SpringConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Autowired
-  public void setAuthTokenFilter(AuthTokenFilter authTokenFilter){
+  public void setAuthTokenFilter(AuthTokenFilter authTokenFilter) {
     this.authTokenFilter = authTokenFilter;
   }
 
   @Autowired
-  public void setExceptionHandlerFilter(ExceptionHandlerFilter exceptionHandlerFilter){
+  public void setExceptionHandlerFilter(ExceptionHandlerFilter exceptionHandlerFilter) {
     this.exceptionHandlerFilter = exceptionHandlerFilter;
   }
 
 
+
   @Bean
-  public PasswordEncoder passwordEncoder(){
+  public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry.
+            addMapping("/**"). // для всех URL
+            allowedOrigins(
+            clientURL). // с каких адресов разрешать запросы (можно указывать через запятую)
+            allowCredentials(true). // разрешить отправлять куки для межсайтового запроса
+            allowedHeaders(
+            "*"). // разрешить все заголовки - без этой настройки в некоторых браузерах может не работать
+            allowedMethods(
+            "*"); // все методы разрешены (GET,POST и пр.) - без этой настройки CORS не будет работать!
+      }
+    };
   }
 
   @Bean
@@ -63,14 +88,15 @@ public class SpringConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Override
-  public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception{
+  public void configure(AuthenticationManagerBuilder authenticationManagerBuilder)
+      throws Exception {
     authenticationManagerBuilder
         .userDetailsService(userDetailsService)
         .passwordEncoder(passwordEncoder());
   }
 
   @Bean
-  public FilterRegistrationBean registration(AuthTokenFilter filter){
+  public FilterRegistrationBean registration(AuthTokenFilter filter) {
     FilterRegistrationBean registration = new FilterRegistrationBean(filter);
     registration.setEnabled(false);
     return registration;
