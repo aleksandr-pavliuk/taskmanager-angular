@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import javax.persistence.Cacheable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -23,52 +24,55 @@ import lombok.Setter;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 @Entity
-@Table(name = "user_data", schema = "tasklist", catalog = "postgres")
+@Table(name = "USER_DATA", schema = "tasklist", catalog = "postgres")
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Email
-    private String email;
+  @Email
+  private String email;
 
-    private String username;
+  @Column
+  private String username;
 
-//    @Column(name = "userpassword")
-    private String password;
+  //    @Column(name = "userpassword")
+  @Column
+  private String password;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-    public Activity activity;
+  @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+  public Activity activity;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(	name = "USER_ROLE",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+  @ManyToMany(fetch = FetchType.LAZY)
+  @JoinTable(name = "USER_ROLE",
+      joinColumns = @JoinColumn(name = "user_id"),
+      inverseJoinColumns = @JoinColumn(name = "role_id"))
+  private Set<Role> roles = new HashSet<>();
 
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return id.equals(user.id);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    User user = (User) o;
 
-    @Override
-    public String toString() {
-        return username;
-    }
+    return email.equals(user.email);
+  }
+
+  @Override
+  public int hashCode() {
+    return email.hashCode();
+  }
 }
+
+

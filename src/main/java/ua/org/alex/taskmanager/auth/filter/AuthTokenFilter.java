@@ -9,6 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,7 +63,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         .anyMatch(s -> request.getRequestURI().toLowerCase(
             Locale.ROOT).contains(s));
 
-    if (!isRequestToPublicAPI /*&& SecurityContextHolder.getContext().getAuthentication() == null*/) {
+   if (!isRequestToPublicAPI && !request.getMethod().equals(HttpMethod.OPTIONS.toString())) {
 
       String jwt = null;
 
@@ -78,7 +79,6 @@ public class AuthTokenFilter extends OncePerRequestFilter {
           User user = jwtUtils.getUser(jwt);
 
           UserDetailsImpl userDetails = new UserDetailsImpl(user);
-
           UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
               userDetails, null, userDetails.getAuthorities());
 
@@ -92,7 +92,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
       } else {
         throw new AuthenticationCredentialsNotFoundException("token not found");
       }
-    }
+   }
 
     filterChain.doFilter(request, response);
   }

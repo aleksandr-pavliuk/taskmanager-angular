@@ -6,6 +6,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,7 +36,7 @@ public class CategoryController {
     return categoryService.findAll(email);
   }
 
-  @PostMapping("/add")
+  @PostMapping ("/add")
   public ResponseEntity<Category> add(@RequestBody Category category) {
 
     if (category.getId() != null && category.getId() != 0) {
@@ -49,7 +50,7 @@ public class CategoryController {
     return ResponseEntity.ok(categoryService.add(category));
   }
 
-  @PutMapping("/update")
+  @PatchMapping("/update")
   public ResponseEntity<Category> update(@RequestBody Category category) {
 
     if (category.getId() == null && category.getId() == 0) {

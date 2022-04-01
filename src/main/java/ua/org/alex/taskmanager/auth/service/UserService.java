@@ -36,8 +36,9 @@ public class UserService {
   }
 
   public void register(User user, Activity activity) {
-    activityRepository.save(activity);
+
     userRepository.save(user);
+    activityRepository.save(activity);
 
   }
 
